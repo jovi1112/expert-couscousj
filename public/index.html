@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Minecraft DoS Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 50px;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            display: inline-block;
+            width: 300px;
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #chartContainer {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Minecraft DoS Tool</h1>
+        <form id="dosForm">
+            <label for="serverAddress">Dirección IP del Servidor:</label>
+            <input type="text" id="serverAddress" name="serverAddress" required>
+            <label for="port">Puerto:</label>
+            <input type="number" id="port" name="port" required>
+            <button type="submit">Iniciar DoS</button>
+        </form>
+        <p id="status"></p>
+        <div id="chartContainer">
+            <canvas id="performanceChart"></canvas>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.getElementById('dosForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const serverAddress = document.getElementById('serverAddress').value;
+            const port = document.getElementById('port').value;
+            document.getElementById('status').innerText = 'Conectando...';
+
+            fetch(`/dos?ip=${serverAddress}&port=${port}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('status').innerText = data.message;
+                    updateChart(data.performance);
+                })
+                .catch(error => {
+                    document.getElementById('status').innerText = 'Error: ' + error.message;
+                });
+        });
+
+        function updateChart(performanceData) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            const labels = performanceData.map(data => data.time);
+            const latencies = performanceData.map(data => data.latency);
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Latencia (ms)',
+                        data: latencies,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            type: 'category',
+                            labels: labels
+                        },
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
